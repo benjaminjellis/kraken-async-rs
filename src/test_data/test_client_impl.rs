@@ -1,38 +1,38 @@
-use crate::clients::errors::ClientError;
-use crate::clients::http_response_types::ResultErrorResponse;
-use crate::clients::kraken_client::KrakenClient;
-use crate::clients::rate_limited_kraken_client::RateLimitedKrakenClient;
-use crate::crypto::nonce_provider::{IncreasingNonceProvider, NonceProvider};
-use crate::request_types::{
-    AccountTransferRequest, AddBatchedOrderRequest, AddOrderRequest, AllocateEarnFundsRequest,
-    AmendOrderRequest, AssetInfoRequest, CancelAllOrdersAfterRequest, CancelBatchOrdersRequest,
-    CancelOrderRequest, ClosedOrdersRequest, CreateSubAccountRequest, DeleteExportRequest,
-    DepositAddressesRequest, DepositMethodsRequest, EarnAllocationStatusRequest, EditOrderRequest,
-    ExportReportRequest, ExportReportStatusRequest, LedgersInfoRequest, ListEarnAllocationsRequest,
-    ListEarnStrategiesRequest, OHLCRequest, OpenOrdersRequest, OpenPositionsRequest,
-    OrderAmendsRequest, OrderRequest, OrderbookRequest, QueryLedgerRequest, RecentSpreadsRequest,
-    RecentTradesRequest, RetrieveExportReportRequest, StatusOfDepositWithdrawRequest,
-    TickerRequest, TradableAssetPairsRequest, TradeBalanceRequest, TradeInfoRequest,
-    TradeVolumeRequest, TradesHistoryRequest, WalletTransferRequest, WithdrawCancelRequest,
-    WithdrawFundsRequest, WithdrawalAddressesRequest, WithdrawalInfoRequest,
-    WithdrawalMethodsRequest,
+use crate::{
+    clients::{
+        errors::ClientError, http_response_types::ResultErrorResponse, kraken_client::KrakenClient,
+        rate_limited_kraken_client::RateLimitedKrakenClient,
+    },
+    crypto::nonce_provider::{IncreasingNonceProvider, NonceProvider},
+    request_types::{
+        AccountTransferRequest, AddBatchedOrderRequest, AddOrderRequest, AllocateEarnFundsRequest,
+        AmendOrderRequest, AssetInfoRequest, CancelAllOrdersAfterRequest, CancelBatchOrdersRequest,
+        CancelOrderRequest, ClosedOrdersRequest, CreateSubAccountRequest, DeleteExportRequest,
+        DepositAddressesRequest, DepositMethodsRequest, EarnAllocationStatusRequest,
+        EditOrderRequest, ExportReportRequest, ExportReportStatusRequest, LedgersInfoRequest,
+        ListEarnAllocationsRequest, ListEarnStrategiesRequest, OHLCRequest, OpenOrdersRequest,
+        OpenPositionsRequest, OrderAmendsRequest, OrderRequest, OrderbookRequest,
+        QueryLedgerRequest, RecentSpreadsRequest, RecentTradesRequest, RetrieveExportReportRequest,
+        StatusOfDepositWithdrawRequest, TickerRequest, TradableAssetPairsRequest,
+        TradeBalanceRequest, TradeInfoRequest, TradeVolumeRequest, TradesHistoryRequest,
+        WalletTransferRequest, WithdrawCancelRequest, WithdrawFundsRequest,
+        WithdrawalAddressesRequest, WithdrawalInfoRequest, WithdrawalMethodsRequest,
+    },
+    response_types::{
+        AccountBalances, AccountTransfer, AddOrder, AddOrderBatch, AddOrderDescription,
+        AllocationStatus, AmendOrder, AssetInfo, BatchedOrder, CancelAllOrdersAfter, CancelOrder,
+        ClosedOrders, ConfirmationRefId, DeleteExportReport, DepositAddress, DepositMethod,
+        DepositWithdrawResponse, DepositWithdrawal, EarnAllocations, EarnStrategies, ExportReport,
+        ExportReportStatus, ExtendedBalances, LedgerInfo, OhlcResponse, OpenOrders, OpenPositions,
+        Order, OrderAmends, OrderEdit, OrderEditStatus, Orderbook, QueryLedgerInfo, RecentSpreads,
+        RecentTrades, RestTickerInfo, SystemStatusInfo, SystemTime, TradableAssetPair,
+        TradeBalances, TradeVolume, TradesHistory, TradesInfo, VerificationTier, WebsocketToken,
+        WithdrawMethod, Withdrawal, WithdrawalAddress,
+    },
+    secrets::secrets_provider::SecretsProvider,
+    test_data::{get_null_secrets_provider, TestRateLimitedClient},
 };
-use crate::response_types::{
-    AccountBalances, AccountTransfer, AddOrder, AddOrderBatch, AddOrderDescription,
-    AllocationStatus, AmendOrder, AssetInfo, BatchedOrder, CancelAllOrdersAfter, CancelOrder,
-    ClosedOrders, ConfirmationRefId, DeleteExportReport, DepositAddress, DepositMethod,
-    DepositWithdrawResponse, DepositWithdrawal, EarnAllocations, EarnStrategies, ExportReport,
-    ExportReportStatus, ExtendedBalances, LedgerInfo, OhlcResponse, OpenOrders, OpenPositions,
-    Order, OrderAmends, OrderEdit, OrderEditStatus, Orderbook, QueryLedgerInfo, RecentSpreads,
-    RecentTrades, RestTickerInfo, SystemStatusInfo, SystemTime, TradableAssetPair, TradeBalances,
-    TradeVolume, TradesHistory, TradesInfo, VerificationTier, WebsocketToken, WithdrawMethod,
-    Withdrawal, WithdrawalAddress,
-};
-use crate::secrets::secrets_provider::SecretsProvider;
-use crate::test_data::{get_null_secrets_provider, TestRateLimitedClient};
-use rust_decimal_macros::dec;
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 
 pub fn get_rate_limit_test_client(verification: VerificationTier) -> TestRateLimitedClient {
@@ -323,8 +323,8 @@ impl KrakenClient for TestClient {
                 status: OrderEditStatus::Ok,
                 tx_id: self.get_unique_id(),
                 original_tx_id: request.tx_id.clone(),
-                volume: dec!(0),
-                price: dec!(0),
+                volume: 0.0,
+                price: 0.0,
                 price2: None,
                 orders_cancelled: 0,
                 descr: AddOrderDescription {

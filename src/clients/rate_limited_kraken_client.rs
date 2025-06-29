@@ -1,19 +1,22 @@
 //! A rate-limited [KrakenClient]
-use crate::clients::errors::ClientError;
-use crate::clients::http_response_types::ResultErrorResponse;
-use crate::clients::kraken_client::KrakenClient;
-use crate::crypto::nonce_provider::NonceProvider;
-use crate::rate_limiting::keyed_rate_limits::KeyedRateLimiter;
-use crate::rate_limiting::trading_rate_limits::KrakenTradingRateLimiter;
-use crate::request_types::*;
-use crate::response_types::*;
-use crate::secrets::secrets_provider::SecretsProvider;
-use async_rate_limit::limiters::{RateLimiter, VariableCostRateLimiter};
-use async_rate_limit::sliding_window::SlidingWindowRateLimiter;
-use async_rate_limit::token_bucket::{TokenBucketRateLimiter, TokenBucketState};
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::Duration;
+use crate::{
+    clients::{
+        errors::ClientError, http_response_types::ResultErrorResponse, kraken_client::KrakenClient,
+    },
+    crypto::nonce_provider::NonceProvider,
+    rate_limiting::{
+        keyed_rate_limits::KeyedRateLimiter, trading_rate_limits::KrakenTradingRateLimiter,
+    },
+    request_types::*,
+    response_types::*,
+    secrets::secrets_provider::SecretsProvider,
+};
+use async_rate_limit::{
+    limiters::{RateLimiter, VariableCostRateLimiter},
+    sliding_window::SlidingWindowRateLimiter,
+    token_bucket::{TokenBucketRateLimiter, TokenBucketState},
+};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 use time::OffsetDateTime;
 use tokio::sync::Mutex;
 
@@ -749,43 +752,49 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::clients::core_kraken_client::CoreKrakenClient;
-    use crate::clients::kraken_client::endpoints::KRAKEN_BASE_URL;
-    use crate::clients::kraken_client::KrakenClient;
-    use crate::clients::rate_limited_kraken_client::RateLimitedKrakenClient;
-    use crate::crypto::nonce_provider::{IncreasingNonceProvider, NonceProvider};
-    use crate::request_types::{
-        AccountTransferRequest, AddBatchedOrderRequest, AddOrderRequest, AllocateEarnFundsRequest,
-        AmendOrderRequest, AssetInfoRequestBuilder, BatchedOrderRequest, CancelBatchOrdersRequest,
-        CancelOrderRequest, CandlestickInterval, ClosedOrdersRequestBuilder,
-        CreateSubAccountRequest, DeleteExportRequest, DeleteExportType, DepositAddressesRequest,
-        DepositMethodsRequest, EarnAllocationStatusRequest, EditOrderRequest, ExportReportRequest,
-        ExportReportStatusRequest, IntOrString, LedgersInfoRequest, ListEarnAllocationsRequest,
-        ListEarnStrategiesRequest, OHLCRequest, OpenOrdersRequest, OpenPositionsRequest,
-        OrderFlags, OrderRequest, OrderbookRequest, QueryLedgerRequest, RecentSpreadsRequest,
-        RecentTradesRequest, ReportFormatType, ReportType, RetrieveExportReportRequest,
-        StatusOfDepositWithdrawRequest, StringCSV, TickerRequest, TradableAssetPairsRequest,
-        TradeBalanceRequest, TradeInfoRequest, TradeVolumeRequest, TradesHistoryRequest,
-        WalletTransferRequest, WithdrawCancelRequest, WithdrawFundsRequest,
-        WithdrawalAddressesRequest, WithdrawalInfoRequest, WithdrawalMethodsRequest,
+    use crate::{
+        clients::{
+            core_kraken_client::CoreKrakenClient,
+            kraken_client::{endpoints::KRAKEN_BASE_URL, KrakenClient},
+            rate_limited_kraken_client::RateLimitedKrakenClient,
+        },
+        crypto::nonce_provider::{IncreasingNonceProvider, NonceProvider},
+        request_types::{
+            AccountTransferRequest, AddBatchedOrderRequest, AddOrderRequest,
+            AllocateEarnFundsRequest, AmendOrderRequest, AssetInfoRequestBuilder,
+            BatchedOrderRequest, CancelBatchOrdersRequest, CancelOrderRequest, CandlestickInterval,
+            ClosedOrdersRequestBuilder, CreateSubAccountRequest, DeleteExportRequest,
+            DeleteExportType, DepositAddressesRequest, DepositMethodsRequest,
+            EarnAllocationStatusRequest, EditOrderRequest, ExportReportRequest,
+            ExportReportStatusRequest, IntOrString, LedgersInfoRequest, ListEarnAllocationsRequest,
+            ListEarnStrategiesRequest, OHLCRequest, OpenOrdersRequest, OpenPositionsRequest,
+            OrderFlags, OrderRequest, OrderbookRequest, QueryLedgerRequest, RecentSpreadsRequest,
+            RecentTradesRequest, ReportFormatType, ReportType, RetrieveExportReportRequest,
+            StatusOfDepositWithdrawRequest, StringCSV, TickerRequest, TradableAssetPairsRequest,
+            TradeBalanceRequest, TradeInfoRequest, TradeVolumeRequest, TradesHistoryRequest,
+            WalletTransferRequest, WithdrawCancelRequest, WithdrawFundsRequest,
+            WithdrawalAddressesRequest, WithdrawalInfoRequest, WithdrawalMethodsRequest,
+        },
+        response_types::{
+            AddOrder, BuySell, OrderFlag, OrderType, VerificationTier,
+            VerificationTier::{Intermediate, Pro},
+        },
+        secrets::secrets_provider::StaticSecretsProvider,
+        test_data::{
+            get_null_secrets_provider, get_rate_limit_test_client, get_rate_limit_test_client_err,
+            public_response_json::get_server_time_json, TestRateLimitedClient,
+        },
+        test_rate_limited_endpoint,
     };
-    use crate::response_types::VerificationTier::{Intermediate, Pro};
-    use crate::response_types::{AddOrder, BuySell, OrderFlag, OrderType, VerificationTier};
-    use crate::secrets::secrets_provider::StaticSecretsProvider;
-    use crate::test_data::public_response_json::get_server_time_json;
-    use crate::test_data::TestRateLimitedClient;
-    use crate::test_data::{
-        get_null_secrets_provider, get_rate_limit_test_client, get_rate_limit_test_client_err,
+    use std::{sync::Arc, time::Duration};
+    use tokio::{
+        sync::Mutex,
+        time::{pause, Instant},
     };
-    use crate::test_rate_limited_endpoint;
-    use rust_decimal_macros::dec;
-    use std::sync::Arc;
-    use std::time::Duration;
-    use tokio::sync::Mutex;
-    use tokio::time::pause;
-    use tokio::time::Instant;
-    use wiremock::matchers::{header, method, path};
-    use wiremock::{Mock, MockServer, ResponseTemplate};
+    use wiremock::{
+        matchers::{header, method, path},
+        Mock, MockServer, ResponseTemplate,
+    };
 
     #[test]
     fn client_creates() {
@@ -1257,7 +1266,7 @@ mod tests {
         assert!(amend_elapsed < Duration::from_secs(8));
     }
 
-    fn get_amend_for_order(orders: &Vec<AddOrder>, i: usize) -> AmendOrderRequest {
+    fn get_amend_for_order(orders: &[AddOrder], i: usize) -> AmendOrderRequest {
         AmendOrderRequest::builder()
             .tx_id(orders.get(i).unwrap().tx_id.first().unwrap().clone()) // TODO: cleanup
             .build()
@@ -1438,39 +1447,29 @@ mod tests {
         let order_flags =
             OrderFlags::new(vec![OrderFlag::NoMarketPriceProtection, OrderFlag::Post]);
 
-        AddOrderRequest::builder(
-            OrderType::Market,
-            BuySell::Buy,
-            dec!(5.0),
-            "USDCUSD".to_string(),
-        )
-        .order_flags(order_flags)
-        .price(dec!(0.90))
-        .build()
+        AddOrderRequest::builder(OrderType::Market, BuySell::Buy, 5.0, "USDCUSD".to_string())
+            .order_flags(order_flags)
+            .price(0.90)
+            .build()
     }
 
     fn get_add_order_request_user_ref() -> AddOrderRequest {
         let order_flags =
             OrderFlags::new(vec![OrderFlag::NoMarketPriceProtection, OrderFlag::Post]);
 
-        AddOrderRequest::builder(
-            OrderType::Market,
-            BuySell::Buy,
-            dec!(5.0),
-            "USDCUSD".to_string(),
-        )
-        .user_ref(42)
-        .order_flags(order_flags)
-        .price(dec!(0.90))
-        .build()
+        AddOrderRequest::builder(OrderType::Market, BuySell::Buy, 5.0, "USDCUSD".to_string())
+            .user_ref(42)
+            .order_flags(order_flags)
+            .price(0.90)
+            .build()
     }
 
     fn get_batched_order_request(n_orders: u64) -> AddBatchedOrderRequest {
         let mut orders = Vec::new();
 
         for _ in 0..n_orders {
-            let order = BatchedOrderRequest::builder(OrderType::Limit, BuySell::Buy, dec!(5.1))
-                .price(dec!(0.9))
+            let order = BatchedOrderRequest::builder(OrderType::Limit, BuySell::Buy, 5.1)
+                .price(0.9)
                 .start_time("0".to_string())
                 .expire_time("+5".to_string())
                 .build();
@@ -1485,7 +1484,7 @@ mod tests {
         let edit_request = EditOrderRequest {
             user_ref: None,
             tx_id: order.tx_id.first().unwrap().clone(),
-            volume: dec!(0),
+            volume: 0.0,
             display_volume: None,
             pair: "".to_string(),
             price: None,
@@ -1570,7 +1569,7 @@ mod tests {
         let request = WithdrawalInfoRequest::builder(
             "XBT".to_string(),
             "Greenlisted Address".to_string(),
-            dec!(0.1),
+            0.1,
         )
         .build();
 
@@ -1585,9 +1584,9 @@ mod tests {
         let request = WithdrawFundsRequest::builder(
             "XBT".to_string(),
             "Greenlisted Address".to_string(),
-            dec!(0.1),
+            0.1,
         )
-        .max_fee(dec!(0.00001))
+        .max_fee(0.00001)
         .build();
 
         // 25 calls costs 2500, requiring 10s to replenish @ 50/s
@@ -1631,7 +1630,7 @@ mod tests {
             "XBT".to_string(),
             "Account One".to_string(),
             "Account Two".to_string(),
-            dec!(0.25),
+            0.25,
         )
         .build();
 
@@ -1657,7 +1656,7 @@ mod tests {
 
         let request = AccountTransferRequest::builder(
             "BTC".to_string(),
-            dec!(1031.2008),
+            1031.2008,
             "SourceAccount".to_string(),
             "DestAccount".to_string(),
         )
@@ -1672,8 +1671,7 @@ mod tests {
         pause();
 
         let request =
-            AllocateEarnFundsRequest::builder(dec!(10.123), "W38S2C-Y1E0R-DUFM2T".to_string())
-                .build();
+            AllocateEarnFundsRequest::builder(10.123, "W38S2C-Y1E0R-DUFM2T".to_string()).build();
 
         // 24 calls costs 2400, requiring 4s to replenish @ 100/s
         test_rate_limited_endpoint!(allocate_earn_funds, 24, 4, 5, Pro, &request);
@@ -1684,8 +1682,7 @@ mod tests {
         pause();
 
         let request =
-            AllocateEarnFundsRequest::builder(dec!(10.123), "W38S2C-Y1E0R-DUFM2T".to_string())
-                .build();
+            AllocateEarnFundsRequest::builder(10.123, "W38S2C-Y1E0R-DUFM2T".to_string()).build();
 
         // 24 calls costs 2400, requiring 8s to replenish @ 50/s
         test_rate_limited_endpoint!(deallocate_earn_funds, 24, 8, 9, Intermediate, &request);

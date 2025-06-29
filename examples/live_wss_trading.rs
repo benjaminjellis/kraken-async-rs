@@ -1,21 +1,20 @@
-use kraken_async_rs::clients::core_kraken_client::CoreKrakenClient;
-use kraken_async_rs::clients::kraken_client::KrakenClient;
-use kraken_async_rs::crypto::nonce_provider::{IncreasingNonceProvider, NonceProvider};
-use kraken_async_rs::crypto::secrets::Token;
-use kraken_async_rs::request_types::{SelfTradePrevention, TimeInForceV2};
-use kraken_async_rs::response_types::{BuySell, OrderType};
-use kraken_async_rs::secrets::secrets_provider::{EnvSecretsProvider, SecretsProvider};
-use kraken_async_rs::test_support::set_up_logging;
-use kraken_async_rs::wss::KrakenWSSClient;
-use kraken_async_rs::wss::{
-    AddOrderParams, AddOrderResult, CancelOrderParams, EditOrderParams, FeePreference, Message,
-    MethodMessage, ResultResponse, WssMessage,
+use kraken_async_rs::{
+    clients::{core_kraken_client::CoreKrakenClient, kraken_client::KrakenClient},
+    crypto::{
+        nonce_provider::{IncreasingNonceProvider, NonceProvider},
+        secrets::Token,
+    },
+    request_types::{SelfTradePrevention, TimeInForceV2},
+    response_types::{BuySell, OrderType},
+    secrets::secrets_provider::{EnvSecretsProvider, SecretsProvider},
+    test_support::set_up_logging,
+    wss::{
+        AddOrderParams, AddOrderResult, CancelOrderParams, EditOrderParams, FeePreference,
+        KrakenWSSClient, Message, MethodMessage, ResultResponse, WssMessage,
+    },
 };
-use rust_decimal_macros::dec;
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::sync::Mutex;
-use tokio::time::timeout;
+use std::{sync::Arc, time::Duration};
+use tokio::{sync::Mutex, time::timeout};
 use tokio_stream::StreamExt;
 use tracing::{info, warn};
 
@@ -44,11 +43,11 @@ async fn main() {
         order_type: OrderType::Limit,
         side: BuySell::Buy,
         symbol: "USDC/USD".to_string(),
-        limit_price: Some(dec!(0.95)),
+        limit_price: Some(0.95),
         limit_price_type: None,
         triggers: None,
         time_in_force: Some(TimeInForceV2::GTC),
-        order_quantity: dec!(5.0),
+        order_quantity: 5.0,
         margin: None,
         post_only: Some(true),
         reduce_only: None,
@@ -127,10 +126,10 @@ fn order_edit_from_add_order_result(
         deadline: None,
         display_quantity: None,
         fee_preference: None,
-        limit_price: Some(dec!(0.93)),
+        limit_price: Some(0.93),
         no_market_price_protection: None,
         order_id: add_order_result.order_id,
-        order_quantity: Some(dec!(6.1)),
+        order_quantity: Some(6.1),
         order_user_ref: None,
         post_only: None,
         reduce_only: None,

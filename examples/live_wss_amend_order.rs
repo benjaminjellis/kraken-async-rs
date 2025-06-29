@@ -1,20 +1,17 @@
-use kraken_async_rs::clients::core_kraken_client::CoreKrakenClient;
-use kraken_async_rs::clients::kraken_client::KrakenClient;
-use kraken_async_rs::crypto::nonce_provider::{IncreasingNonceProvider, NonceProvider};
-use kraken_async_rs::request_types::{SelfTradePrevention, TimeInForceV2};
-use kraken_async_rs::response_types::{BuySell, OrderType};
-use kraken_async_rs::secrets::secrets_provider::{EnvSecretsProvider, SecretsProvider};
-use kraken_async_rs::test_support::set_up_logging;
-use kraken_async_rs::wss::KrakenWSSClient;
-use kraken_async_rs::wss::{
-    AddOrderParams, AmendOrderParams, CancelOrderParams, FeePreference, Message, MethodMessage,
-    WssMessage,
+use kraken_async_rs::{
+    clients::{core_kraken_client::CoreKrakenClient, kraken_client::KrakenClient},
+    crypto::nonce_provider::{IncreasingNonceProvider, NonceProvider},
+    request_types::{SelfTradePrevention, TimeInForceV2},
+    response_types::{BuySell, OrderType},
+    secrets::secrets_provider::{EnvSecretsProvider, SecretsProvider},
+    test_support::set_up_logging,
+    wss::{
+        AddOrderParams, AmendOrderParams, CancelOrderParams, FeePreference, KrakenWSSClient,
+        Message, MethodMessage, WssMessage,
+    },
 };
-use rust_decimal_macros::dec;
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::sync::Mutex;
-use tokio::time::timeout;
+use std::{sync::Arc, time::Duration};
+use tokio::{sync::Mutex, time::timeout};
 use tokio_stream::StreamExt;
 use tracing::{info, warn};
 
@@ -43,11 +40,11 @@ async fn main() {
         order_type: OrderType::Limit,
         side: BuySell::Buy,
         symbol: "USDC/USD".to_string(),
-        limit_price: Some(dec!(0.95)),
+        limit_price: Some(0.95),
         limit_price_type: None,
         triggers: None,
         time_in_force: Some(TimeInForceV2::GTC),
-        order_quantity: dec!(5.0),
+        order_quantity: 5.0,
         margin: None,
         post_only: Some(true),
         reduce_only: None,
@@ -85,10 +82,10 @@ async fn main() {
                 if !amended {
                     amended = true;
 
-                    let amend_params = AmendOrderParams::builder(dec!(5.1), token.clone())
+                    let amend_params = AmendOrderParams::builder(5.1, token.clone())
                         .post_only(true)
                         .order_id(response.result.unwrap().order_id)
-                        .limit_price(dec!(0.96))
+                        .limit_price(0.96)
                         .build();
 
                     let message = Message {

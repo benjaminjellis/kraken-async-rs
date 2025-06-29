@@ -1,11 +1,11 @@
-use kraken_async_rs::clients::core_kraken_client::CoreKrakenClient;
-use kraken_async_rs::clients::kraken_client::KrakenClient;
-use kraken_async_rs::crypto::nonce_provider::{IncreasingNonceProvider, NonceProvider};
-use kraken_async_rs::request_types::{AddOrderRequest, CancelBatchOrdersRequest};
-use kraken_async_rs::response_types::{BuySell, OrderFlag, OrderType};
-use kraken_async_rs::secrets::secrets_provider::{EnvSecretsProvider, SecretsProvider};
-use kraken_async_rs::test_support::set_up_logging;
-use rust_decimal_macros::dec;
+use kraken_async_rs::{
+    clients::{core_kraken_client::CoreKrakenClient, kraken_client::KrakenClient},
+    crypto::nonce_provider::{IncreasingNonceProvider, NonceProvider},
+    request_types::{AddOrderRequest, CancelBatchOrdersRequest},
+    response_types::{BuySell, OrderFlag, OrderType},
+    secrets::secrets_provider::{EnvSecretsProvider, SecretsProvider},
+    test_support::set_up_logging,
+};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::info;
@@ -31,16 +31,12 @@ async fn main() {
     let mut order_ids = vec![];
 
     for _ in 0..2 {
-        let request = AddOrderRequest::builder(
-            OrderType::Limit,
-            BuySell::Buy,
-            dec!(5.1234),
-            "USDCUSD".into(),
-        )
-        .price(dec!(0.99))
-        // individual OrderFlag variants have a From<OrderFlag> for OrderFlags conversion for convenience
-        .order_flags(OrderFlag::Post.into())
-        .build();
+        let request =
+            AddOrderRequest::builder(OrderType::Limit, BuySell::Buy, 5.1234, "USDCUSD".into())
+                .price(0.99)
+                // individual OrderFlag variants have a From<OrderFlag> for OrderFlags conversion for convenience
+                .order_flags(OrderFlag::Post.into())
+                .build();
 
         let new_order = client
             .add_order(&request)
