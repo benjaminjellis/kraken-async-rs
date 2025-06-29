@@ -1,11 +1,8 @@
 //! REST request types
 //!
 use crate::response_types::{BuySell, LedgerEntryType, OrderFlag, OrderType};
-use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use serde_with::formats::CommaSeparator;
-use serde_with::StringWithSeparator;
-use serde_with::{serde_as, skip_serializing_none};
+use serde_with::{formats::CommaSeparator, serde_as, skip_serializing_none, StringWithSeparator};
 use simple_builder::Builder;
 use std::fmt::{Display, Formatter};
 use to_query_params::{QueryParams, ToQueryParams};
@@ -583,7 +580,7 @@ pub struct DeleteExportRequest {
 }
 
 /// A request to create a new spot order.
-#[derive(Debug, Clone, QueryParams, Builder, PartialEq, Eq)]
+#[derive(Debug, Clone, QueryParams, Builder, PartialEq)]
 pub struct AddOrderRequest {
     #[query(rename = "userref")]
     pub user_ref: Option<i64>,
@@ -597,17 +594,17 @@ pub struct AddOrderRequest {
     pub side: BuySell,
     #[builder(required)]
     #[query(required)]
-    pub volume: Decimal,
+    pub volume: f64,
     #[query(rename = "displayvol")]
-    pub display_volume: Option<Decimal>,
+    pub display_volume: Option<f64>,
     #[builder(required)]
     #[query(required)]
     pub pair: String,
     #[query(rename = "reqid")]
     pub req_id: Option<i64>,
-    pub price: Option<Decimal>,
+    pub price: Option<f64>,
     #[query(rename = "price2")]
-    pub price_2: Option<Decimal>,
+    pub price_2: Option<f64>,
     pub trigger: Option<TriggerType>,
     pub leverage: Option<i64>,
     pub reduce_only: Option<bool>,
@@ -624,9 +621,9 @@ pub struct AddOrderRequest {
     #[query(rename = "close[ordertype]")]
     pub close_order_type: Option<String>,
     #[query(rename = "close[price]")]
-    pub close_price: Option<Decimal>,
+    pub close_price: Option<f64>,
     #[query(rename = "close[price2]")]
-    pub close_price_2: Option<Decimal>,
+    pub close_price_2: Option<f64>,
     pub deadline: Option<String>,
     pub validate: Option<bool>,
 }
@@ -659,12 +656,12 @@ pub struct BatchedOrderRequest {
     #[serde(rename = "type")]
     pub side: BuySell,
     #[builder(required)]
-    pub volume: Decimal,
+    pub volume: f64,
     #[serde(rename = "displayvol")]
-    pub display_volume: Option<Decimal>,
-    pub price: Option<Decimal>,
+    pub display_volume: Option<f64>,
+    pub price: Option<f64>,
     #[serde(rename = "price2")]
-    pub price_2: Option<Decimal>,
+    pub price_2: Option<f64>,
     pub trigger: Option<TriggerType>,
     pub leverage: Option<i64>,
     pub reduce_only: Option<bool>,
@@ -689,9 +686,9 @@ pub struct AmendOrderRequest {
     #[serde(rename = "cl_ord_id")]
     pub client_order_id: Option<String>,
     #[serde(rename = "order_qty")]
-    pub order_quantity: Option<Decimal>,
+    pub order_quantity: Option<f64>,
     #[serde(rename = "display_qty")]
-    pub display_quantity: Option<Decimal>,
+    pub display_quantity: Option<f64>,
     pub limit_price: Option<String>,
     pub trigger_price: Option<String>,
     pub post_only: Option<bool>,
@@ -708,15 +705,15 @@ pub struct EditOrderRequest {
     pub tx_id: String,
     #[builder(required)]
     #[query(required)]
-    pub volume: Decimal,
+    pub volume: f64,
     #[query(rename = "displayvol")]
-    pub display_volume: Option<Decimal>,
+    pub display_volume: Option<f64>,
     #[builder(required)]
     #[query(required)]
     pub pair: String,
-    pub price: Option<Decimal>,
+    pub price: Option<f64>,
     #[query(rename = "price2")]
-    pub price_2: Option<Decimal>,
+    pub price_2: Option<f64>,
     #[query(rename = "oflags")]
     pub order_flags: Option<OrderFlags>,
     pub deadline: Option<String>,
@@ -797,7 +794,7 @@ pub struct DepositAddressesRequest {
     pub method: String,
     #[query(rename = "new")]
     pub is_new: Option<bool>,
-    pub amount: Option<Decimal>, // only for Lightning network
+    pub amount: Option<f64>, // only for Lightning network
 }
 
 /// A request for all available withdrawal methods for the user.
@@ -860,7 +857,7 @@ pub struct WithdrawalInfoRequest {
     pub key: String,
     #[builder(required)]
     #[query(required)]
-    pub amount: Decimal,
+    pub amount: f64,
 }
 
 /// A request to withdraw funds.
@@ -874,9 +871,9 @@ pub struct WithdrawFundsRequest {
     pub key: String,
     #[builder(required)]
     #[query(required)]
-    pub amount: Decimal,
+    pub amount: f64,
     pub address: Option<String>,
-    pub max_fee: Option<Decimal>,
+    pub max_fee: Option<f64>,
 }
 
 /// A request to cancel an active withdrawal.
@@ -904,7 +901,7 @@ pub struct WalletTransferRequest {
     pub to: String,
     #[builder(required)]
     #[query(required)]
-    pub amount: Decimal,
+    pub amount: f64,
 }
 
 /// A request to create a sub-account for trading.
@@ -926,7 +923,7 @@ pub struct AccountTransferRequest {
     pub asset: String,
     #[builder(required)]
     #[query(required)]
-    pub amount: Decimal,
+    pub amount: f64,
     #[builder(required)]
     #[query(required)]
     pub from: String,
@@ -940,7 +937,7 @@ pub struct AccountTransferRequest {
 pub struct AllocateEarnFundsRequest {
     #[builder(required)]
     #[query(required)]
-    pub amount: Decimal,
+    pub amount: f64,
     #[builder(required)]
     #[query(required)]
     pub strategy_id: String,
@@ -976,8 +973,10 @@ pub struct ListEarnAllocationsRequest {
 
 #[cfg(test)]
 mod tests {
-    use crate::request_types::{CancelBatchOrdersRequest, IntOrString, OrderFlags, StringCSV};
-    use crate::response_types::OrderFlag;
+    use crate::{
+        request_types::{CancelBatchOrdersRequest, IntOrString, OrderFlags, StringCSV},
+        response_types::OrderFlag,
+    };
 
     #[test]
     fn test_cancel_batch_order_request_ids() {

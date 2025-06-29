@@ -1,17 +1,14 @@
 //! REST response types
-use crate::clients::errors::ClientError;
-use crate::crypto::secrets::Token;
-use crate::request_types::TriggerType;
-use rust_decimal::Decimal;
+use crate::{clients::errors::ClientError, crypto::secrets::Token, request_types::TriggerType};
 use serde::{Deserialize, Serialize};
 use serde_this_or_that::as_i64;
 use serde_tuple::Deserialize_tuple;
-use serde_with::formats::CommaSeparator;
-use serde_with::serde_as;
-use serde_with::StringWithSeparator;
-use std::collections::HashMap;
-use std::fmt::{Debug, Display, Formatter};
-use std::str::FromStr;
+use serde_with::{formats::CommaSeparator, serde_as, StringWithSeparator};
+use std::{
+    collections::HashMap,
+    fmt::{Debug, Display, Formatter},
+    str::FromStr,
+};
 
 /// A user's level of KYC verification with Kraken
 ///
@@ -366,7 +363,6 @@ pub enum AccountTransferStatus {
 #[derive(Debug, Deserialize, PartialEq, Clone, Copy)]
 #[serde(untagged)]
 pub enum EarnFee {
-    Decimal(Decimal),
     Integer(i64),
     Float(f64),
 }
@@ -468,10 +464,10 @@ pub struct TradableAssetPair {
     pub margin_call: i64,
     pub margin_stop: i64,
     #[serde(rename = "ordermin")]
-    pub order_min: Decimal,
+    pub order_min: f64,
     #[serde(rename = "costmin")]
-    pub cost_min: Decimal,
-    pub tick_size: Decimal,
+    pub cost_min: f64,
+    pub tick_size: f64,
     pub status: TradableAssetStatus,
     pub long_position_limit: Option<i64>,
     pub short_position_limit: Option<i64>,
@@ -486,9 +482,9 @@ pub struct TickerTrades {
 
 /// Ticker helper type to serve differently typed data for the last 24 hours.
 #[derive(Debug, Deserialize_tuple, PartialEq, Clone)]
-pub struct TickerDecimal {
-    pub today: Decimal,
-    pub last_24_h: Decimal,
+pub struct Tickerf64 {
+    pub today: f64,
+    pub last_24_h: f64,
 }
 
 /// Best bid or ask
@@ -496,9 +492,9 @@ pub struct TickerDecimal {
 /// Separate type needed for varying data format from REST API.
 #[derive(Debug, Deserialize_tuple, PartialEq, Clone)]
 pub struct RestTickerBidAsk {
-    pub price: Decimal,
-    pub whole_lot_volume: Decimal,
-    pub lot_volume: Decimal,
+    pub price: f64,
+    pub whole_lot_volume: f64,
+    pub lot_volume: f64,
 }
 
 /// Best bid or ask
@@ -506,17 +502,17 @@ pub struct RestTickerBidAsk {
 /// Separate type needed for different format from WSS API.
 #[derive(Debug, Deserialize_tuple, PartialEq, Clone)]
 pub struct TickerBidAsk {
-    pub price: Decimal,
+    pub price: f64,
     #[serde(deserialize_with = "as_i64")]
     pub whole_lot_volume: i64,
-    pub lot_volume: Decimal,
+    pub lot_volume: f64,
 }
 
 /// Price and volume for the most recent trade
 #[derive(Debug, Deserialize_tuple, PartialEq, Clone)]
 pub struct LastTrade {
-    pub price: Decimal,
-    pub volume: Decimal,
+    pub price: f64,
+    pub volume: f64,
 }
 
 /// Complete ticker information for an asset
@@ -529,29 +525,29 @@ pub struct RestTickerInfo {
     #[serde(rename(deserialize = "c"))]
     pub closed: LastTrade,
     #[serde(rename(deserialize = "v"))]
-    pub volume: TickerDecimal,
+    pub volume: Tickerf64,
     #[serde(rename(deserialize = "p"))]
-    pub vwap: TickerDecimal,
+    pub vwap: Tickerf64,
     #[serde(rename(deserialize = "t"))]
     pub trades: TickerTrades,
     #[serde(rename(deserialize = "l"))]
-    pub low: TickerDecimal,
+    pub low: Tickerf64,
     #[serde(rename(deserialize = "h"))]
-    pub high: TickerDecimal,
+    pub high: Tickerf64,
     #[serde(rename(deserialize = "o"))]
-    pub open: Decimal,
+    pub open: f64,
 }
 
 /// Candlestick data for the given interval
 #[derive(Debug, Deserialize_tuple, PartialEq, Clone)]
 pub struct OHLC {
     pub time: i64,
-    pub open: Decimal,
-    pub high: Decimal,
-    pub low: Decimal,
-    pub close: Decimal,
-    pub vwap: Decimal,
-    pub volume: Decimal,
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+    pub vwap: f64,
+    pub volume: f64,
     pub count: i64,
 }
 
@@ -570,8 +566,8 @@ pub struct OhlcResponse {
 /// Identical data for bids and asks, only context determines if it's a bid or ask.
 #[derive(Debug, Deserialize_tuple, PartialEq, Clone)]
 pub struct BidAsk {
-    pub price: Decimal,
-    pub volume: Decimal,
+    pub price: f64,
+    pub volume: f64,
     pub time: i64,
 }
 
@@ -587,8 +583,8 @@ pub struct Orderbook {
 /// The model is the same regardless of if request to be consolidated by taker
 #[derive(Debug, Deserialize_tuple, PartialEq, Clone)]
 pub struct RecentTrade {
-    pub price: Decimal,
-    pub volume: Decimal,
+    pub price: f64,
+    pub volume: f64,
     pub time: f64,
     pub buy_sell: BuySellChar,
     pub market_limit: MarketLimitChar,
@@ -611,8 +607,8 @@ pub struct RecentTrades {
 #[derive(Debug, Deserialize_tuple, PartialEq, Clone)]
 pub struct Spread {
     pub time: i64,
-    pub bid: Decimal,
-    pub ask: Decimal,
+    pub bid: f64,
+    pub ask: f64,
 }
 
 /// Spreads for one or many assets
@@ -626,43 +622,43 @@ pub struct RecentSpreads {
 }
 
 /// Convenience type for asset: amount balances
-pub type AccountBalances = HashMap<String, Decimal>;
+pub type AccountBalances = HashMap<String, f64>;
 
 /// Convenience type for asset: extended balances
 pub type ExtendedBalances = HashMap<String, ExtendedBalance>;
 
 /// Detailed balance data, including holds and credit (if available)
-#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct ExtendedBalance {
-    pub balance: Decimal,
-    pub hold_trade: Decimal,
-    pub credit: Option<Decimal>,
-    pub credit_used: Option<Decimal>,
+    pub balance: f64,
+    pub hold_trade: f64,
+    pub credit: Option<f64>,
+    pub credit_used: Option<f64>,
 }
 
 /// Detailed margin balance data
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct TradeBalances {
     #[serde(rename(deserialize = "eb"))]
-    pub equivalent_balance: Decimal,
+    pub equivalent_balance: f64,
     #[serde(rename(deserialize = "tb"))]
-    pub trade_balance: Decimal,
+    pub trade_balance: f64,
     #[serde(rename(deserialize = "m"))]
-    pub margin: Decimal,
+    pub margin: f64,
     #[serde(rename(deserialize = "n"))]
-    pub net_pnl_open: Decimal,
+    pub net_pnl_open: f64,
     #[serde(rename(deserialize = "c"))]
-    pub cost_basis_open: Decimal,
+    pub cost_basis_open: f64,
     #[serde(rename(deserialize = "v"))]
-    pub floating_valuation: Decimal,
+    pub floating_valuation: f64,
     #[serde(rename(deserialize = "e"))]
-    pub equity: Decimal,
+    pub equity: f64,
     #[serde(rename(deserialize = "mf"))]
-    pub free_margin: Decimal,
+    pub free_margin: f64,
     #[serde(rename(deserialize = "ml"))]
-    pub margin_level: Option<Decimal>,
+    pub margin_level: Option<f64>,
     #[serde(rename(deserialize = "uv"))]
-    pub unexecuted_value: Option<Decimal>,
+    pub unexecuted_value: Option<f64>,
 }
 
 /// Details of individual order
@@ -673,8 +669,8 @@ pub struct OrderDescription {
     pub side: BuySell,
     #[serde(rename(deserialize = "ordertype"))]
     pub order_type: OrderType,
-    pub price: Decimal,
-    pub price2: Decimal,
+    pub price: f64,
+    pub price2: f64,
     pub leverage: String,
     pub order: String,
     pub close: String,
@@ -706,16 +702,16 @@ pub struct Order {
     pub close_time: Option<f64>,
     pub descr: OrderDescription,
     #[serde(rename(deserialize = "vol"))]
-    pub volume: Decimal,
+    pub volume: f64,
     #[serde(rename(deserialize = "vol_exec"))]
-    pub volume_executed: Decimal,
-    pub cost: Decimal,
-    pub fee: Decimal,
-    pub price: Decimal,
+    pub volume_executed: f64,
+    pub cost: f64,
+    pub fee: f64,
+    pub price: f64,
     #[serde(rename = "stopprice")]
-    pub stop_price: Decimal,
+    pub stop_price: f64,
     #[serde(rename = "limitprice")]
-    pub limit_price: Decimal,
+    pub limit_price: f64,
     pub trigger: Option<TriggerType>,
     pub margin: Option<bool>,
     pub misc: String,
@@ -749,12 +745,12 @@ pub struct Trade {
     pub side: BuySell,
     #[serde(rename = "ordertype")]
     pub order_type: TradeType,
-    pub price: Decimal,
-    pub cost: Decimal,
-    pub fee: Decimal,
+    pub price: f64,
+    pub cost: f64,
+    pub fee: f64,
     #[serde(rename(deserialize = "vol"))]
-    pub volume: Decimal,
-    pub margin: Decimal,
+    pub volume: f64,
+    pub margin: f64,
     pub misc: String,
     pub ledgers: Option<Vec<String>>,
     pub trade_id: u64,
@@ -782,13 +778,13 @@ pub struct OrderAmend {
     pub amend_id: String,
     pub amend_type: AmendType,
     #[serde(rename = "order_qty")]
-    pub order_quantity: Decimal,
+    pub order_quantity: f64,
     #[serde(rename = "display_qty")]
-    pub display_quantity: Option<Decimal>,
+    pub display_quantity: Option<f64>,
     #[serde(rename = "remaining_qty")]
-    pub remaining_quantity: Decimal,
-    pub limit_price: Decimal,
-    pub trigger_price: Option<Decimal>,
+    pub remaining_quantity: f64,
+    pub limit_price: f64,
+    pub trigger_price: Option<f64>,
     pub reason: Option<String>,
     pub post_only: bool,
     pub timestamp: u64,
@@ -811,15 +807,15 @@ pub struct OpenPosition {
     pub side: BuySell,
     #[serde(rename = "ordertype")]
     pub order_type: OrderType,
-    pub cost: Decimal,
-    pub fee: Decimal,
+    pub cost: f64,
+    pub fee: f64,
     #[serde(rename(deserialize = "vol"))]
-    pub volume: Decimal,
+    pub volume: f64,
     #[serde(rename(deserialize = "vol_closed"))]
-    pub volume_closed: Decimal,
-    pub margin: Decimal,
-    pub value: Option<Decimal>,
-    pub net: Option<Decimal>,
+    pub volume_closed: f64,
+    pub margin: f64,
+    pub value: Option<f64>,
+    pub net: Option<f64>,
     pub terms: String,
     #[serde(rename = "rollovertm")]
     pub rollover_time: String,
@@ -841,9 +837,9 @@ pub struct LedgerEntry {
     #[serde(rename = "aclass")]
     pub asset_class: String,
     pub asset: String,
-    pub amount: Decimal,
-    pub fee: Decimal,
-    pub balance: Decimal,
+    pub amount: f64,
+    pub fee: f64,
+    pub balance: f64,
 }
 
 /// Mapping of ledger id: ledger entry
@@ -859,17 +855,17 @@ pub struct LedgerInfo {
 /// Description of fee tier
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct Fees {
-    pub fee: Decimal,
+    pub fee: f64,
     #[serde(rename = "minfee")]
-    pub min_fee: Decimal,
+    pub min_fee: f64,
     #[serde(rename = "maxfee")]
-    pub max_fee: Decimal,
+    pub max_fee: f64,
     #[serde(rename = "nextfee")]
-    pub next_fee: Option<Decimal>,
+    pub next_fee: Option<f64>,
     #[serde(rename = "nextvolume")]
-    pub next_volume: Option<Decimal>,
+    pub next_volume: Option<f64>,
     #[serde(rename = "tiervolume")]
-    pub tier_volume: Option<Decimal>,
+    pub tier_volume: Option<f64>,
 }
 
 /// Response type for TradeVolume
@@ -879,7 +875,7 @@ pub struct Fees {
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct TradeVolume {
     pub currency: String,
-    pub volume: Decimal,
+    pub volume: f64,
     pub fees: Option<HashMap<String, Fees>>,
     pub fees_maker: Option<HashMap<String, Fees>>,
 }
@@ -966,9 +962,9 @@ pub struct OrderEdit {
     pub tx_id: String,
     #[serde(rename = "originaltxid")]
     pub original_tx_id: String,
-    pub volume: Decimal,
-    pub price: Decimal,
-    pub price2: Option<Decimal>,
+    pub volume: f64,
+    pub price: f64,
+    pub price2: Option<f64>,
     pub orders_cancelled: i64,
     pub descr: AddOrderDescription,
 }
@@ -994,10 +990,10 @@ pub struct CancelAllOrdersAfter {
 pub struct DepositMethod {
     pub method: String,
     pub limit: BoolOrString,
-    pub fee: Option<Decimal>,
-    pub address_setup_fee: Option<Decimal>,
+    pub fee: Option<f64>,
+    pub address_setup_fee: Option<f64>,
     pub gen_address: Option<bool>,
-    pub minimum: Decimal,
+    pub minimum: f64,
 }
 
 /// Description of a withdrawal method
@@ -1006,7 +1002,7 @@ pub struct WithdrawMethod {
     pub asset: String,
     pub method: String,
     pub network: Option<String>,
-    pub minimum: Decimal,
+    pub minimum: f64,
 }
 
 /// Description of a deposit address
@@ -1060,8 +1056,8 @@ pub struct DepositWithdrawal {
     #[serde(rename = "txid")]
     pub tx_id: String,
     pub info: String,
-    pub amount: Decimal,
-    pub fee: Decimal,
+    pub amount: f64,
+    pub fee: f64,
     pub time: i64,
     pub status: TransferStatus,
     #[serde(rename = "status-prop")]
@@ -1074,8 +1070,8 @@ pub struct DepositWithdrawal {
 pub struct Withdrawal {
     pub method: String,
     pub limit: BoolOrString,
-    pub fee: Decimal,
-    pub amount: Decimal,
+    pub fee: f64,
+    pub amount: f64,
 }
 
 /// Response type containing only a ref id for confirmation
@@ -1118,8 +1114,8 @@ pub struct EarnStrategy {
     pub deallocation_fee: EarnFee,
     pub id: String,
     pub lock_type: LockTypeDetail,
-    pub user_cap: Option<Decimal>,
-    pub user_min_allocation: Option<Decimal>,
+    pub user_cap: Option<f64>,
+    pub user_min_allocation: Option<f64>,
     pub yield_source: YieldSource,
 }
 
@@ -1148,8 +1144,8 @@ pub struct BondingDetail {
 /// Bracketed estimate for a strategy's APR
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct AprEstimate {
-    pub low: Decimal,
-    pub high: Decimal,
+    pub low: f64,
+    pub high: f64,
 }
 
 /// Wrapper type for compounding nature of a strategy
@@ -1172,8 +1168,8 @@ pub struct YieldSource {
 pub struct EarnAllocations {
     pub converted_asset: String,
     pub items: Vec<EarnAllocation>,
-    pub total_allocated: Decimal,
-    pub total_rewarded: Decimal,
+    pub total_allocated: f64,
+    pub total_rewarded: f64,
 }
 
 /// Description of an allocation to an earn strategy
@@ -1201,8 +1197,8 @@ pub struct AmountAllocated {
 pub struct AllocationState {
     pub allocation_count: i64,
     pub allocations: Vec<Allocation>,
-    pub converted: Decimal,
-    pub native: Decimal,
+    pub converted: f64,
+    pub native: f64,
 }
 
 /// Description of assets allocated to a strategy
@@ -1210,8 +1206,8 @@ pub struct AllocationState {
 pub struct Allocation {
     pub created_at: String,
     pub expires: String,
-    pub converted: Decimal,
-    pub native: Decimal,
+    pub converted: f64,
+    pub native: f64,
 }
 
 /// Description of the payout for a particular allocation
@@ -1226,8 +1222,8 @@ pub struct Payout {
 /// Amount earned by an allocation in the requested and native assets
 #[derive(Debug, Deserialize, PartialEq, Clone, Copy)]
 pub struct EarnAmount {
-    pub converted: Decimal,
-    pub native: Decimal,
+    pub converted: f64,
+    pub native: f64,
 }
 
 /// Response type for GetWebSocketsToken
@@ -1240,7 +1236,6 @@ pub struct WebsocketToken {
 #[cfg(test)]
 mod tests {
     use crate::response_types::ExtendedBalance;
-    use rust_decimal_macros::dec;
 
     #[test]
     fn test_deserializing_extended_balance_full() {
@@ -1248,10 +1243,10 @@ mod tests {
             r#"{"balance": "0.01", "hold_trade": "0.02", "credit": "0.03", "credit_used": "0.04"}"#;
 
         let expected_balance = ExtendedBalance {
-            balance: dec!(0.01),
-            hold_trade: dec!(0.02),
-            credit: Some(dec!(0.03)),
-            credit_used: Some(dec!(0.04)),
+            balance: 0.01,
+            hold_trade: 0.02,
+            credit: Some(0.03),
+            credit_used: Some(0.04),
         };
 
         assert_eq!(expected_balance, serde_json::from_str(balance).unwrap());
@@ -1262,8 +1257,8 @@ mod tests {
         let balance_missing = r#"{"balance": "0.01", "hold_trade": "0.02"}"#;
 
         let expected_balance = ExtendedBalance {
-            balance: dec!(0.01),
-            hold_trade: dec!(0.02),
+            balance: 0.01,
+            hold_trade: 0.02,
             credit: None,
             credit_used: None,
         };

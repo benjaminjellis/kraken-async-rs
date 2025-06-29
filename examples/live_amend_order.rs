@@ -1,13 +1,13 @@
-use kraken_async_rs::clients::core_kraken_client::CoreKrakenClient;
-use kraken_async_rs::clients::kraken_client::KrakenClient;
-use kraken_async_rs::crypto::nonce_provider::{IncreasingNonceProvider, NonceProvider};
-use kraken_async_rs::request_types::{
-    AddOrderRequest, AmendOrderRequest, CancelOrderRequest, OrderAmendsRequest, OrderRequest,
+use kraken_async_rs::{
+    clients::{core_kraken_client::CoreKrakenClient, kraken_client::KrakenClient},
+    crypto::nonce_provider::{IncreasingNonceProvider, NonceProvider},
+    request_types::{
+        AddOrderRequest, AmendOrderRequest, CancelOrderRequest, OrderAmendsRequest, OrderRequest,
+    },
+    response_types::{BuySell, OrderFlag, OrderType},
+    secrets::secrets_provider::{EnvSecretsProvider, SecretsProvider},
+    test_support::set_up_logging,
 };
-use kraken_async_rs::response_types::{BuySell, OrderFlag, OrderType};
-use kraken_async_rs::secrets::secrets_provider::{EnvSecretsProvider, SecretsProvider};
-use kraken_async_rs::test_support::set_up_logging;
-use rust_decimal_macros::dec;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::info;
@@ -29,15 +29,11 @@ async fn main() {
 
     let mut client = CoreKrakenClient::new(secrets_provider, nonce_provider);
 
-    let request = AddOrderRequest::builder(
-        OrderType::Limit,
-        BuySell::Buy,
-        dec!(5.1234),
-        "USDCUSD".into(),
-    )
-    .price(dec!(0.95))
-    .order_flags(OrderFlag::Post.into())
-    .build();
+    let request =
+        AddOrderRequest::builder(OrderType::Limit, BuySell::Buy, 5.1234, "USDCUSD".into())
+            .price(0.95)
+            .order_flags(OrderFlag::Post.into())
+            .build();
 
     let new_order = client
         .add_order(&request)
@@ -63,8 +59,8 @@ async fn main() {
 
     let amend_request = AmendOrderRequest::builder()
         .tx_id(order_id.clone())
-        .order_quantity(dec!(5.25))
-        .limit_price(dec!(0.96).to_string())
+        .order_quantity(5.25)
+        .limit_price("0.96".to_string())
         .post_only(true)
         .build();
 

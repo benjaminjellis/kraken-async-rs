@@ -1,8 +1,8 @@
-use crate::crypto::secrets::Token;
-use crate::request_types::{IntOrString, SelfTradePrevention, TimeInForceV2, TriggerType};
-use crate::response_types::{BuySell, OrderType};
-use rust_decimal::serde::{float, float_option};
-use rust_decimal::Decimal;
+use crate::{
+    crypto::secrets::Token,
+    request_types::{IntOrString, SelfTradePrevention, TimeInForceV2, TriggerType},
+    response_types::{BuySell, OrderType},
+};
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use simple_builder::Builder;
@@ -38,17 +38,17 @@ pub enum PriceType {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TriggerParams {
-    pub price: Decimal,
+    pub price: f64,
     pub price_type: Option<PriceType>,
     pub reference: Option<TriggerType>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct ConditionalParams {
     pub order_type: Option<OrderType>,
-    pub limit_price: Option<Decimal>,
+    pub limit_price: Option<f64>,
     pub limit_price_type: Option<PriceType>,
-    pub trigger_price: Option<Decimal>,
+    pub trigger_price: Option<f64>,
     pub trigger_price_type: Option<PriceType>,
 }
 
@@ -58,14 +58,12 @@ pub struct AddOrderParams {
     pub order_type: OrderType,
     pub side: BuySell,
     pub symbol: String,
-    #[serde(with = "float_option")]
-    pub limit_price: Option<Decimal>,
+    pub limit_price: Option<f64>,
     pub limit_price_type: Option<PriceType>,
     pub triggers: Option<TriggerParams>,
     pub time_in_force: Option<TimeInForceV2>,
-    #[serde(with = "float")]
     #[serde(rename = "order_qty")]
-    pub order_quantity: Decimal,
+    pub order_quantity: f64,
     pub margin: Option<bool>,
     pub post_only: Option<bool>,
     pub reduce_only: Option<bool>,
@@ -77,16 +75,14 @@ pub struct AddOrderParams {
     #[serde(rename = "order_userref")]
     pub order_user_ref: Option<i64>,
     pub conditional: Option<ConditionalParams>,
-    #[serde(with = "float_option")]
     #[serde(rename = "display_qty")]
-    pub display_quantity: Option<Decimal>,
+    pub display_quantity: Option<f64>,
     pub fee_preference: Option<FeePreference>,
     #[serde(rename = "no_mpp")]
     pub no_market_price_protection: Option<bool>,
     pub stp_type: Option<SelfTradePrevention>,
-    #[serde(with = "float_option")]
     #[serde(rename = "cash_order_qty")]
-    pub cash_order_quantity: Option<Decimal>,
+    pub cash_order_quantity: Option<f64>,
     pub validate: Option<bool>,
     pub sender_sub_id: Option<String>,
     pub token: Token,
@@ -109,17 +105,14 @@ pub struct AmendOrderParams {
     #[serde(rename = "cl_ord_id")]
     pub client_order_id: Option<String>,
     #[serde(rename = "order_qty")]
-    #[serde(with = "float")]
     #[builder(required)]
-    pub order_quantity: Decimal,
+    pub order_quantity: f64,
     #[serde(rename = "display_qty")]
-    pub display_quantity: Option<Decimal>,
-    #[serde(with = "float_option")]
-    pub limit_price: Option<Decimal>,
+    pub display_quantity: Option<f64>,
+    pub limit_price: Option<f64>,
     pub limit_price_type: Option<PriceType>,
     pub post_only: Option<bool>,
-    #[serde(with = "float_option")]
-    pub trigger_price: Option<Decimal>,
+    pub trigger_price: Option<f64>,
     pub trigger_price_type: Option<PriceType>,
     pub deadline: Option<String>,
     #[builder(required)]
@@ -139,18 +132,15 @@ pub struct AmendOrderResult {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EditOrderParams {
     pub deadline: Option<String>,
-    #[serde(with = "float_option")]
     #[serde(rename = "display_qty")]
-    pub display_quantity: Option<Decimal>,
+    pub display_quantity: Option<f64>,
     pub fee_preference: Option<FeePreference>,
-    #[serde(with = "float_option")]
-    pub limit_price: Option<Decimal>,
+    pub limit_price: Option<f64>,
     #[serde(rename = "no_mpp")]
     pub no_market_price_protection: Option<bool>,
     pub order_id: String,
-    #[serde(with = "float_option")]
     #[serde(rename = "order_qty")]
-    pub order_quantity: Option<Decimal>,
+    pub order_quantity: Option<f64>,
     #[serde(rename = "order_userref")]
     pub order_user_ref: Option<i64>,
     pub post_only: Option<bool>,
@@ -218,14 +208,12 @@ pub struct CancelOnDisconnectResult {
 pub struct BatchOrder {
     pub order_type: OrderType,
     pub side: BuySell,
-    #[serde(with = "float_option")]
-    pub limit_price: Option<Decimal>,
+    pub limit_price: Option<f64>,
     pub limit_price_type: Option<PriceType>,
     pub triggers: Option<TriggerParams>,
     pub time_in_force: Option<TimeInForceV2>,
-    #[serde(with = "float")]
     #[serde(rename = "order_qty")]
-    pub order_quantity: Decimal,
+    pub order_quantity: f64,
     pub margin: Option<bool>,
     pub post_only: Option<bool>,
     pub reduce_only: Option<bool>,
@@ -234,16 +222,14 @@ pub struct BatchOrder {
     #[serde(rename = "order_userref")]
     pub order_user_ref: Option<i64>,
     pub conditional: Option<ConditionalParams>,
-    #[serde(with = "float_option")]
     #[serde(rename = "display_qty")]
-    pub display_quantity: Option<Decimal>,
+    pub display_quantity: Option<f64>,
     pub fee_preference: Option<FeePreference>,
     #[serde(rename = "no_mpp")]
     pub no_market_price_protection: Option<bool>,
     pub stp_type: Option<SelfTradePrevention>,
-    #[serde(with = "float_option")]
     #[serde(rename = "cash_order_qty")]
-    pub cash_order_quantity: Option<Decimal>,
+    pub cash_order_quantity: Option<f64>,
     #[serde(rename = "cl_ord_id")]
     pub client_order_id: Option<String>,
 }

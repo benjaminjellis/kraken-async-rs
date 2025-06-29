@@ -1,12 +1,12 @@
-use crate::crypto::secrets::Token;
-use crate::request_types::{TimeInForce, TriggerType};
-use crate::response_types::{BuySell, OrderStatusV2, OrderType, PositionStatusV2};
-use crate::wss::{
-    BookSubscriptionResponse, OhlcSubscriptionResponse, TickerSubscriptionResponse,
-    TradeSubscriptionResponse,
+use crate::{
+    crypto::secrets::Token,
+    request_types::{TimeInForce, TriggerType},
+    response_types::{BuySell, OrderStatusV2, OrderType, PositionStatusV2},
+    wss::{
+        BookSubscriptionResponse, ConditionalParams, FeePreference, OhlcSubscriptionResponse,
+        PriceType, TickerSubscriptionResponse, TradeSubscriptionResponse,
+    },
 };
-use crate::wss::{ConditionalParams, FeePreference, PriceType};
-use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -200,17 +200,17 @@ pub struct ExecutionResponse {
 pub struct Fee {
     pub asset: String,
     #[serde(rename = "qty")]
-    pub quantity: Decimal,
+    pub quantity: f64,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct TriggerDescription {
     pub reference: TriggerType,
-    pub price: Decimal,
+    pub price: f64,
     pub price_type: PriceType,
-    pub actual_price: Option<Decimal>,
-    pub peak_price: Option<Decimal>,
-    pub last_price: Option<Decimal>,
+    pub actual_price: Option<f64>,
+    pub peak_price: Option<f64>,
+    pub last_price: Option<f64>,
     pub status: TriggerStatus,
     pub timestamp: Option<String>,
 }
@@ -221,28 +221,28 @@ pub struct ExecutionResult {
     #[serde(rename = "exec_type")]
     pub execution_type: ExecutionType,
     #[serde(rename = "cash_order_qty")]
-    pub cash_order_quantity: Option<Decimal>,
+    pub cash_order_quantity: Option<f64>,
     #[serde(rename = "cl_ord_id")]
     pub client_order_id: Option<String>,
     pub contingent: Option<ConditionalParams>,
-    pub cost: Option<Decimal>,
+    pub cost: Option<f64>,
     #[serde(rename = "exec_id")]
     pub execution_id: Option<String>,
     pub fees: Option<Vec<Fee>>,
     #[serde(rename = "liquidity_ind")]
     pub liquidity_indicator: Option<MakerTaker>,
-    pub last_price: Option<Decimal>,
+    pub last_price: Option<f64>,
     #[serde(rename = "last_qty")]
-    pub last_quantity: Option<Decimal>,
+    pub last_quantity: Option<f64>,
     #[serde(rename = "avg_price")]
-    pub average_price: Option<Decimal>,
+    pub average_price: Option<f64>,
     pub reason: Option<String>,
     #[serde(rename = "cum_cost")]
-    pub cumulative_cost: Option<Decimal>,
+    pub cumulative_cost: Option<f64>,
     #[serde(rename = "cum_qty")]
-    pub cumulative_quantity: Option<Decimal>,
+    pub cumulative_quantity: Option<f64>,
     #[serde(rename = "display_qty")]
-    pub display_quantity: Option<Decimal>,
+    pub display_quantity: Option<f64>,
     pub effective_time: Option<String>,
     pub expire_time: Option<String>,
     pub ext_ord_id: Option<String>,
@@ -250,8 +250,8 @@ pub struct ExecutionResult {
     #[serde(rename = "fee_ccy_pref")]
     pub fee_preference: Option<FeePreference>,
     #[serde(rename = "fee_usd_equiv")]
-    pub fee_usd_equivalent: Option<Decimal>,
-    pub limit_price: Option<Decimal>,
+    pub fee_usd_equivalent: Option<f64>,
+    pub limit_price: Option<f64>,
     pub limit_price_type: Option<PriceType>,
     pub liquidated: Option<bool>,
     pub margin: Option<bool>,
@@ -262,7 +262,7 @@ pub struct ExecutionResult {
     pub order_ref_id: Option<i64>,
     pub order_id: String,
     #[serde(rename = "order_qty")]
-    pub order_quantity: Option<Decimal>,
+    pub order_quantity: Option<f64>,
     pub order_type: Option<OrderType>,
     pub order_status: OrderStatusV2,
     #[serde(rename = "order_userref")]
@@ -299,7 +299,7 @@ impl BalancesSubscription {
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Wallet {
-    pub balance: Decimal,
+    pub balance: f64,
     #[serde(rename = "type")]
     pub wallet_type: WalletType,
     pub id: WalletId,
@@ -315,16 +315,16 @@ pub enum BalanceResponse {
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Balance {
     pub asset: String,
-    pub balance: Decimal,
+    pub balance: f64,
     pub wallets: Vec<Wallet>,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct LedgerUpdate {
     pub asset: String,
-    pub amount: Decimal,
-    pub balance: Decimal,
-    pub fee: Decimal,
+    pub amount: f64,
+    pub balance: f64,
+    pub fee: f64,
     pub ledger_id: String,
     pub ref_id: String,
     pub timestamp: String,
@@ -340,7 +340,6 @@ pub struct LedgerUpdate {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rust_decimal_macros::dec;
 
     #[test]
     fn test_deserializing_execution_trade() {
@@ -350,15 +349,15 @@ mod tests {
             execution_type: ExecutionType::Trade,
             cash_order_quantity: None,
             contingent: None,
-            cost: Some(dec!(12.70744)),
+            cost: Some(12.70744),
             execution_id: Some("TJE7HC-DKBTI-5BFVKE".to_string()),
             fees: Some(vec![Fee {
                 asset: "USD".to_string(),
-                quantity: dec!(0.05083),
+                quantity: 0.05083,
             }]),
             liquidity_indicator: Some(MakerTaker::Taker),
-            last_price: Some(dec!(0.121)),
-            last_quantity: Some(dec!(105.02014889)),
+            last_price: Some(0.121),
+            last_quantity: Some(105.02014889),
             average_price: None,
             reason: None,
             cumulative_cost: None,
@@ -369,7 +368,7 @@ mod tests {
             ext_ord_id: Some("some-uuid".to_string()),
             ext_exec_id: Some("another-uuid".to_string()),
             fee_preference: None,
-            fee_usd_equivalent: Some(dec!(0.05083)),
+            fee_usd_equivalent: Some(0.05083),
             limit_price: None,
             limit_price_type: None,
             liquidated: None,

@@ -1,29 +1,31 @@
 //! A base implementation of [KrakenClient]
-use crate::clients::errors::ClientError;
-use crate::clients::errors::KrakenError;
-use crate::clients::http_response_types::ResultErrorResponse;
-use crate::clients::kraken_client::endpoints::*;
-use crate::clients::kraken_client::KrakenClient;
-use crate::crypto::nonce_provider::NonceProvider;
-use crate::crypto::nonce_request::NonceRequest;
-use crate::crypto::signatures::{generate_signature, Signature};
-use crate::request_types::*;
-use crate::response_types::*;
-use crate::secrets::secrets_provider::SecretsProvider;
 #[allow(unused)]
 use crate::secrets::secrets_provider::StaticSecretsProvider;
+use crate::{
+    clients::{
+        errors::{ClientError, KrakenError},
+        http_response_types::ResultErrorResponse,
+        kraken_client::{endpoints::*, KrakenClient},
+    },
+    crypto::{
+        nonce_provider::NonceProvider,
+        nonce_request::NonceRequest,
+        signatures::{generate_signature, Signature},
+    },
+    request_types::*,
+    response_types::*,
+    secrets::secrets_provider::SecretsProvider,
+};
 use http_body_util::BodyExt;
-use hyper::http::request::Builder;
-use hyper::{Method, Request, Uri};
+use hyper::{http::request::Builder, Method, Request, Uri};
 use hyper_tls::HttpsConnector;
-use hyper_util::client::legacy::connect::HttpConnector;
-use hyper_util::client::legacy::Client;
-use hyper_util::rt::TokioExecutor;
+use hyper_util::{
+    client::legacy::{connect::HttpConnector, Client},
+    rt::TokioExecutor,
+};
 use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::str::FromStr;
-use std::sync::Arc;
+use std::{collections::HashMap, str::FromStr, sync::Arc};
 use to_query_params::{QueryParams, ToQueryParams};
 use tokio::sync::Mutex;
 use tracing::trace;
@@ -899,54 +901,60 @@ macro_rules! test_parse_error_matches_pattern {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::clients::core_kraken_client::CoreKrakenClient;
-    use crate::clients::errors::ClientError;
-    use crate::clients::errors::KrakenError;
-    use crate::crypto::nonce_provider::IncreasingNonceProvider;
-    use crate::response_types::AccountBalances;
-    use crate::test_core_endpoint;
-    use crate::test_data::account_response_json::{
-        get_account_balance_json, get_closed_orders_json, get_delete_export_report_json,
-        get_export_report_response, get_export_report_status_json, get_extended_balance_json,
-        get_ledgers_info_json, get_open_orders_json, get_open_positions_json,
-        get_open_positions_json_do_calc_optional_fields, get_order_amends_json,
-        get_query_ledgers_json, get_query_order_info_json, get_query_trades_info_json,
-        get_request_export_report_json, get_trade_balance_json, get_trade_volume_json,
-        get_trades_history_json,
+    use crate::{
+        clients::{
+            core_kraken_client::CoreKrakenClient,
+            errors::{ClientError, KrakenError},
+        },
+        crypto::nonce_provider::IncreasingNonceProvider,
+        response_types::AccountBalances,
+        test_core_endpoint,
+        test_data::{
+            account_response_json::{
+                get_account_balance_json, get_closed_orders_json, get_delete_export_report_json,
+                get_export_report_response, get_export_report_status_json,
+                get_extended_balance_json, get_ledgers_info_json, get_open_orders_json,
+                get_open_positions_json, get_open_positions_json_do_calc_optional_fields,
+                get_order_amends_json, get_query_ledgers_json, get_query_order_info_json,
+                get_query_trades_info_json, get_request_export_report_json, get_trade_balance_json,
+                get_trade_volume_json, get_trades_history_json,
+            },
+            earn_json::{
+                get_allocate_earn_funds_json, get_allocation_status_json,
+                get_deallocate_earn_funds_json, get_deallocation_status_json,
+                get_list_earn_allocations_json, get_list_earn_strategies_json,
+            },
+            funding::{
+                get_deposit_addresses_json, get_deposit_methods_json,
+                get_request_wallet_transfer_json, get_request_withdrawal_cancellation_json,
+                get_status_of_recent_deposits_json, get_status_of_recent_withdrawals_json,
+                get_withdraw_funds_json, get_withdrawal_addresses_json, get_withdrawal_info_json,
+                get_withdrawal_methods_json,
+            },
+            get_null_secrets_provider,
+            public_response_json::{
+                get_asset_info_json, get_ohlc_data_json, get_orderbook_json,
+                get_recent_spreads_json, get_recent_trades_json, get_server_time_json,
+                get_system_status_json, get_ticker_information_json, get_tradable_asset_pairs_json,
+            },
+            sub_accounts_json::{get_account_transfer_json, get_create_sub_account_json},
+            trading_response_json::{
+                get_add_order_batch_json, get_add_order_json, get_amend_order_json,
+                get_cancel_all_orders_after_json, get_cancel_all_orders_json,
+                get_cancel_order_batch_json, get_cancel_order_json, get_edit_order_json,
+            },
+            websockets_json::get_websockets_token_json,
+        },
     };
-    use crate::test_data::earn_json::{
-        get_allocate_earn_funds_json, get_allocation_status_json, get_deallocate_earn_funds_json,
-        get_deallocation_status_json, get_list_earn_allocations_json,
-        get_list_earn_strategies_json,
-    };
-    use crate::test_data::funding::{
-        get_deposit_addresses_json, get_deposit_methods_json, get_request_wallet_transfer_json,
-        get_request_withdrawal_cancellation_json, get_status_of_recent_deposits_json,
-        get_status_of_recent_withdrawals_json, get_withdraw_funds_json,
-        get_withdrawal_addresses_json, get_withdrawal_info_json, get_withdrawal_methods_json,
-    };
-    use crate::test_data::get_null_secrets_provider;
-    use crate::test_data::public_response_json::{
-        get_asset_info_json, get_ohlc_data_json, get_orderbook_json, get_recent_spreads_json,
-        get_recent_trades_json, get_server_time_json, get_system_status_json,
-        get_ticker_information_json, get_tradable_asset_pairs_json,
-    };
-    use crate::test_data::sub_accounts_json::{
-        get_account_transfer_json, get_create_sub_account_json,
-    };
-    use crate::test_data::trading_response_json::{
-        get_add_order_batch_json, get_add_order_json, get_amend_order_json,
-        get_cancel_all_orders_after_json, get_cancel_all_orders_json, get_cancel_order_batch_json,
-        get_cancel_order_json, get_edit_order_json,
-    };
-    use crate::test_data::websockets_json::get_websockets_token_json;
-    use rust_decimal_macros::dec;
     use serde_json::json;
     use tracing_test::traced_test;
-    use wiremock::matchers::{
-        body_partial_json, body_string_contains, header, header_exists, method, path, query_param,
+    use wiremock::{
+        matchers::{
+            body_partial_json, body_string_contains, header, header_exists, method, path,
+            query_param,
+        },
+        Mock, MockServer, ResponseTemplate,
     };
-    use wiremock::{Mock, MockServer, ResponseTemplate};
 
     pub const ERROR_PERMISSION_DENIED: &str = r#"{"error":["EGeneral:Permission denied"]}"#;
     pub const ERROR_INVALID_KEY: &str = r#"{"error":["EAPI:Invalid key"]}"#;
@@ -1814,15 +1822,11 @@ mod tests {
 
         let order_flags =
             OrderFlags::new(vec![OrderFlag::NoMarketPriceProtection, OrderFlag::Post]);
-        let request = AddOrderRequest::builder(
-            OrderType::Market,
-            BuySell::Buy,
-            dec!(5.0),
-            "USDCUSD".to_string(),
-        )
-        .order_flags(order_flags)
-        .price(dec!(0.90))
-        .build();
+        let request =
+            AddOrderRequest::builder(OrderType::Market, BuySell::Buy, 5.0, "USDCUSD".to_string())
+                .order_flags(order_flags)
+                .price(0.90)
+                .build();
 
         let mock_server = MockServer::start().await;
 
@@ -1848,14 +1852,14 @@ mod tests {
     #[tokio::test]
     async fn test_add_order_batch() {
         let secrets_provider = get_null_secrets_provider();
-        let order_1 = BatchedOrderRequest::builder(OrderType::Limit, BuySell::Buy, dec!(5.1))
-            .price(dec!(0.9))
+        let order_1 = BatchedOrderRequest::builder(OrderType::Limit, BuySell::Buy, 5.1)
+            .price(0.9)
             .start_time("0".to_string())
             .expire_time("+5".to_string())
             .build();
 
-        let order_2 = BatchedOrderRequest::builder(OrderType::Limit, BuySell::Sell, dec!(5.2))
-            .price(dec!(0.9))
+        let order_2 = BatchedOrderRequest::builder(OrderType::Limit, BuySell::Sell, 5.2)
+            .price(0.9)
             .order_flags(vec![OrderFlag::Post])
             .build();
 
@@ -1892,8 +1896,8 @@ mod tests {
 
         let amend_request = AmendOrderRequest::builder()
             .tx_id("tx-id".to_string())
-            .order_quantity(dec!(5.25))
-            .limit_price(dec!(0.96).to_string())
+            .order_quantity(5.25)
+            .limit_price("0.96".to_string())
             .post_only(true)
             .build();
 
@@ -1921,10 +1925,10 @@ mod tests {
         let secrets_provider = get_null_secrets_provider();
         let request = EditOrderRequest::builder(
             "7BD466-BKZVM-FT2E2L".to_string(),
-            dec!(5.1),
+            5.1,
             "USDCUSD".to_string(),
         )
-        .price(dec!(0.89))
+        .price(0.89)
         .user_ref(1234)
         .build();
 
@@ -2190,7 +2194,7 @@ mod tests {
         let request = WithdrawalInfoRequest::builder(
             "XBT".to_string(),
             "Greenlisted Address".to_string(),
-            dec!(0.1),
+            0.1,
         )
         .build();
 
@@ -2218,9 +2222,9 @@ mod tests {
         let request = WithdrawFundsRequest::builder(
             "XBT".to_string(),
             "Greenlisted Address".to_string(),
-            dec!(0.1),
+            0.1,
         )
-        .max_fee(dec!(0.00001))
+        .max_fee(0.00001)
         .build();
 
         let mock_server = MockServer::start().await;
@@ -2309,7 +2313,7 @@ mod tests {
             "XBT".to_string(),
             "Account One".to_string(),
             "Account Two".to_string(),
-            dec!(0.25),
+            0.25,
         )
         .build();
 
@@ -2368,7 +2372,7 @@ mod tests {
         let secrets_provider = get_null_secrets_provider();
         let request = AccountTransferRequest::builder(
             "BTC".to_string(),
-            dec!(1031.2008),
+            1031.2008,
             "SourceAccount".to_string(),
             "DestAccount".to_string(),
         )
@@ -2397,8 +2401,7 @@ mod tests {
     async fn test_allocate_earn_funds() {
         let secrets_provider = get_null_secrets_provider();
         let request =
-            AllocateEarnFundsRequest::builder(dec!(10.123), "W38S2C-Y1E0R-DUFM2T".to_string())
-                .build();
+            AllocateEarnFundsRequest::builder(10.123, "W38S2C-Y1E0R-DUFM2T".to_string()).build();
 
         let mock_server = MockServer::start().await;
 
@@ -2421,8 +2424,7 @@ mod tests {
     async fn test_deallocate_earn_funds() {
         let secrets_provider = get_null_secrets_provider();
         let request =
-            AllocateEarnFundsRequest::builder(dec!(10.123), "W38S2C-Y1E0R-DUFM2T".to_string())
-                .build();
+            AllocateEarnFundsRequest::builder(10.123, "W38S2C-Y1E0R-DUFM2T".to_string()).build();
 
         let mock_server = MockServer::start().await;
 

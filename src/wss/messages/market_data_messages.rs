@@ -1,6 +1,4 @@
-use crate::crypto::secrets::Token;
-use crate::response_types::BuySell;
-use rust_decimal::Decimal;
+use crate::{crypto::secrets::Token, response_types::BuySell};
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, skip_serializing_none};
 
@@ -73,20 +71,20 @@ impl TickerSubscription {
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Ticker {
-    pub ask: Decimal,
+    pub ask: f64,
     #[serde(rename = "ask_qty")]
-    pub ask_quantity: Decimal,
-    pub bid: Decimal,
+    pub ask_quantity: f64,
+    pub bid: f64,
     #[serde(rename = "bid_qty")]
-    pub bid_quantity: Decimal,
-    pub change: Decimal,
-    pub change_pct: Decimal,
-    pub high: Decimal,
-    pub last: Decimal,
-    pub low: Decimal,
+    pub bid_quantity: f64,
+    pub change: f64,
+    pub change_pct: f64,
+    pub high: f64,
+    pub last: f64,
+    pub low: f64,
     pub symbol: String,
-    pub volume: Decimal,
-    pub vwap: Decimal,
+    pub volume: f64,
+    pub vwap: f64,
 }
 
 #[serde_as]
@@ -132,9 +130,9 @@ pub enum L2 {
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct BidAsk {
-    pub price: Decimal,
+    pub price: f64,
     #[serde(rename = "qty")]
-    pub quantity: Decimal,
+    pub quantity: f64,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -184,9 +182,9 @@ pub struct L3OrderbookUpdate {
 #[serde(deny_unknown_fields)]
 pub struct L3BidAsk {
     pub order_id: String,
-    pub limit_price: Decimal,
+    pub limit_price: f64,
     #[serde(rename = "order_qty")]
-    pub order_quantity: Decimal,
+    pub order_quantity: f64,
     pub timestamp: String,
 }
 
@@ -194,9 +192,9 @@ pub struct L3BidAsk {
 pub struct L3BidAskUpdate {
     pub event: OrderbookEvent,
     pub order_id: String,
-    pub limit_price: Decimal,
+    pub limit_price: f64,
     #[serde(rename = "order_qty")]
-    pub order_quantity: Decimal,
+    pub order_quantity: f64,
     pub timestamp: String,
 }
 
@@ -262,13 +260,13 @@ pub struct TickerSubscriptionResponse {
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Ohlc {
     pub symbol: String,
-    pub open: Decimal,
-    pub high: Decimal,
-    pub low: Decimal,
-    pub close: Decimal,
-    pub vwap: Decimal,
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+    pub vwap: f64,
     pub trades: i64,
-    pub volume: Decimal,
+    pub volume: f64,
     pub interval_begin: String,
     pub interval: i32,
 }
@@ -297,8 +295,8 @@ pub struct Trade {
     pub symbol: String,
     pub side: BuySell,
     #[serde(rename = "qty")]
-    pub quantity: Decimal,
-    pub price: Decimal,
+    pub quantity: f64,
+    pub price: f64,
     #[serde(rename = "ord_type")]
     pub order_type: MarketLimit,
     pub trade_id: i64,
@@ -325,31 +323,31 @@ impl InstrumentsSubscription {
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Asset {
     pub id: String,
-    pub margin_rate: Option<Decimal>,
+    pub margin_rate: Option<f64>,
     pub precision: i64,
     pub precision_display: i64,
     pub status: AssetStatus,
     pub borrowable: bool,
-    pub collateral_value: Decimal,
+    pub collateral_value: f64,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Pair {
     pub base: String,
     pub quote: String,
-    pub cost_min: Decimal,
+    pub cost_min: f64,
     pub cost_precision: i64,
     pub has_index: bool,
-    pub margin_initial: Option<Decimal>,
+    pub margin_initial: Option<f64>,
     pub marginable: bool,
     pub position_limit_long: Option<i64>,
     pub position_limit_short: Option<i64>,
-    pub price_increment: Decimal,
+    pub price_increment: f64,
     pub price_precision: i64,
     #[serde(rename = "qty_increment")]
-    pub quantity_increment: Decimal,
+    pub quantity_increment: f64,
     #[serde(rename = "qty_min")]
-    pub quantity_min: Decimal,
+    pub quantity_min: f64,
     #[serde(rename = "qty_precision")]
     pub quantity_precision: i64,
     pub status: PairStatus,
@@ -366,19 +364,17 @@ pub struct Instruments {
 mod tests {
     use super::*;
 
-    use rust_decimal_macros::dec;
-
     #[test]
     fn test_deserialize_asset() {
         let raw = r#"{"id":"XLM","status":"enabled","precision":8,"precision_display":5,"borrowable":true,"collateral_value":0.00,"margin_rate":0.020000}"#;
         let expected = Asset {
             id: "XLM".to_string(),
-            margin_rate: Some(dec!(0.02)),
+            margin_rate: Some(0.02),
             precision: 8,
             precision_display: 5,
             status: AssetStatus::Enabled,
             borrowable: true,
-            collateral_value: dec!(0),
+            collateral_value: 0.0,
         };
 
         let deserialized = serde_json::from_str::<Asset>(raw).unwrap();
@@ -392,17 +388,17 @@ mod tests {
         let expected = Pair {
             base: "ETH".to_string(),
             quote: "BTC".to_string(),
-            cost_min: dec!(0.00002),
+            cost_min: 0.00002,
             cost_precision: 10,
             has_index: true,
-            margin_initial: Some(dec!(0.2)),
+            margin_initial: Some(0.2),
             marginable: true,
             position_limit_long: Some(1000),
             position_limit_short: Some(600),
-            price_increment: dec!(0.00001),
+            price_increment: 0.00001,
             price_precision: 5,
-            quantity_increment: dec!(0.00000001),
-            quantity_min: dec!(0.002),
+            quantity_increment: 0.00000001,
+            quantity_min: 0.002,
             quantity_precision: 8,
             status: PairStatus::Online,
             symbol: "ETH/BTC".to_string(),
